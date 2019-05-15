@@ -76,14 +76,7 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
     }
     // 最后按照默认规则进行匹配
     attrMap  := make(map[string]struct{})
-    elemType := elem.Type()
-    for i := 0; i < elem.NumField(); i++ {
-        // 只转换公开属性
-        if !gstr.IsLetterUpper(elemType.Field(i).Name[0]) {
-            continue
-        }
-        attrMap[elemType.Field(i).Name] = struct{}{}
-    }
+    ObjectFieldsMap(objPointer,attrMap)
     for mapK, mapV := range paramsMap {
         name := ""
         for _, checkName := range []string {
@@ -121,6 +114,39 @@ func Struct(params interface{}, objPointer interface{}, attrMapping...map[string
         }
         if err := bindVarToStructAttr(elem, name, mapV); err != nil {
             return err
+        }
+    }
+    return nil
+}
+
+
+func ObjectFieldsMap(objPointer interface{},	attrMap map[string]struct{})  error {
+    // struct的反射对象
+    elem := reflect.Value{}
+    if v, ok := objPointer.(reflect.Value); ok {
+        elem = v
+    } else {
+        rv := reflect.ValueOf(objPointer)
+        if kind := rv.Kind(); kind != reflect.Ptr {
+            return fmt.Errorf("object pointer should be type of: %v", kind)
+        }
+        if !rv.IsValid() || rv.IsNil() {
+            return errors.New("object pointer cannot be nil")
+        }
+        elem = rv.Elem()
+    }
+    elemType := elem.Type()
+    for i := 0; i < elem.NumField(); i++ {
+        field := elemType.Field(i)
+        // 只转换公开属性
+        if !gstr.IsLetterUpper(field.Name[0]) {
+            continue
+        }
+        if field.Type.Kind()== reflect.Struct{
+            structFieldValue := elem.Field(i)
+            ObjectFieldsMap(structFieldValue,attrMap)
+        }else {
+            attrMap[elemType.Field(i).Name] = struct{}{}
         }
     }
     return nil
