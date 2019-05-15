@@ -505,7 +505,14 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
         case reflect.Struct:
             var fields []string
             for k, v := range gconv.Map(data) {
-                fields = append(fields, fmt.Sprintf("%s%s%s=?", charL, k, charR))
+                alias:=""
+                colum:=k
+                p:=strings.Index(k,".")
+                if p>0{
+                    alias=k[:p+1]
+                    colum=k[p+1:]
+                }
+                fields = append(fields, fmt.Sprintf("%s%s%s%s=?",alias, charL, colum, charR))
                 params = append(params, convertParam(v))
             }
             updates = strings.Join(fields, ",")
