@@ -20,7 +20,6 @@ import (
     "github.com/gogf/gf/g/container/gvar"
     "github.com/gogf/gf/g/os/gcache"
     "github.com/gogf/gf/g/util/grand"
-    _ "github.com/gogf/gf/third/github.com/go-sql-driver/mysql"
     "time"
 )
 
@@ -158,7 +157,7 @@ const (
 
 var (
     // Instance map.
-    instances = gmap.NewStringInterfaceMap()
+    instances = gmap.NewStrAnyMap()
 )
 
 // New creates ORM DB object with global configurations.

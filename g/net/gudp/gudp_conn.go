@@ -14,16 +14,17 @@ import (
 
 // 封装的链接对象
 type Conn struct {
-    conn          *net.UDPConn   // 底层链接对象
-    raddr         *net.UDPAddr   // 远程地址
-    recvDeadline   time.Time     // 读取超时时间
-    sendDeadline   time.Time     // 写入超时时间
-    recvBufferWait time.Duration // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
+    conn           *net.UDPConn   // 底层链接对象
+    raddr          *net.UDPAddr   // 远程地址
+	buffer         []byte         // 读取缓冲区(用于数据读取时的缓冲区处理)
+    recvDeadline   time.Time      // 读取超时时间
+    sendDeadline   time.Time      // 写入超时时间
+    recvBufferWait time.Duration  // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
 }
 
 const (
     gDEFAULT_RETRY_INTERVAL   = 100   // (毫秒)默认重试时间间隔
-    gDEFAULT_READ_BUFFER_SIZE = 1024  // 默认数据读取缓冲区大小
+    gDEFAULT_READ_BUFFER_SIZE = 64    // (KB)默认数据读取缓冲区大小
     gRECV_ALL_WAIT_TIMEOUT    = time.Millisecond // 读取全部缓冲数据时，没有缓冲数据时的等待间隔
 )
 
@@ -87,7 +88,8 @@ func (c *Conn) Send(data []byte, retry...Retry) error {
     }
 }
 
-// 接收数据
+// 接收数据.
+// 注意：UDP协议存在消息边界，因此使用 length<=0 可以获取缓冲区所有消息包数据，即一个完整包。
 func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
     var err        error        // 读取错误
     var size       int          // 读取长度
@@ -119,9 +121,14 @@ func (c *Conn) Recv(length int, retry...Retry) ([]byte, error) {
                     break
                 }
             } else {
-                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                 if index >= gDEFAULT_READ_BUFFER_SIZE {
+	                // 如果长度超过了自定义的读取缓冲区，那么自动增长
                     buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
+                } else {
+	                // 如果第一次读取的数据并未达到缓冲变量长度，那么直接返回
+	                if !bufferWait {
+		                break
+	                }
                 }
             }
         }

@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/g/os/gcfg"
+	"log"
 )
 
 func main() {
-	fmt.Println(gcfg.Instance().GetString("viewpath"))
-	fmt.Println(gcfg.Instance().GetString("database.default.0.host"))
+	log.Printf("111")
+	log.Printf("111")
+	log.Print("222")
+	log.Print("222")
+	log.Println("333")
+	log.Println("333")
 }
