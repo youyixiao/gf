@@ -10,7 +10,8 @@ import (
     "fmt"
     "github.com/gogf/gf/g/util/gconv"
     "github.com/gogf/gf/g/text/gregex"
-    "strings"
+	"github.com/gogf/gf/g/text/gstr"
+	"strings"
 )
 
 /*
@@ -71,7 +72,7 @@ func (bs *dbBase) convertValue(fieldValue interface{}, fieldType string) interfa
 func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
     if fields, err := bs.db.getTableFields(table); err == nil {
         for k, _ := range data {
-            if _, ok := fields[k]; !ok {
+            if _, ok := fields[gstr.ToLower(k)]; !ok {
                 delete(data, k)
             }
         }
@@ -91,7 +92,7 @@ func (bs *dbBase) getTableFields(table string) (fields map[string]string, err er
         }
         fields = make(map[string]string)
         for _, m := range result {
-            fields[m["Field"].String()] = m["Type"].String()
+            fields[gstr.ToLower(m["Field"].String())] = m["Type"].String()
         }
         return fields
     }, 0)
